@@ -1,6 +1,26 @@
-[gd_scene load_steps=5 format=3 uid="uid://cpkjbkb51m2tj"]
+[gd_scene load_steps=10 format=3 uid="uid://cpkjbkb51m2tj"]
 
 [ext_resource type="PackedScene" uid="uid://dn5ot82nvjmqy" path="res://scenes/entities/player.tscn" id="1_q7ah7"]
+[ext_resource type="Shader" path="res://shaders/ps1.gdshader" id="2_dyn44"]
+[ext_resource type="Shader" path="res://scenes/maps/vertex.gdshader" id="2_w6vfh"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ke56o"]
+shader = ExtResource("2_dyn44")
+shader_parameter/enabled = true
+shader_parameter/dithering = true
+shader_parameter/colors = 12
+shader_parameter/dither_size = 1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bo560"]
+albedo_color = Color(0.28485, 0.28485, 0.28485, 1)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ksrt8"]
+render_priority = 0
+shader = ExtResource("2_w6vfh")
+shader_parameter/affine_mapping = true
+shader_parameter/alpha_scissor = 0.5
+shader_parameter/jitter = 0.25
+shader_parameter/resolution = Vector2i(320, 240)
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_jfd3b"]
 sky_top_color = Color(0.631555, 0.790998, 0.928779, 1)
@@ -25,39 +45,58 @@ ssao_intensity = 3.0
 ssao_detail = 5.0
 volumetric_fog_density = 0.01
 
-[node name="World" type="Node3D"]
+[node name="SubViewportContainer" type="SubViewportContainer"]
+material = SubResource("ShaderMaterial_ke56o")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
 
-[node name="CSGBox3D" type="CSGBox3D" parent="."]
+[node name="SubViewport" type="SubViewport" parent="."]
+handle_input_locally = false
+size = Vector2i(1152, 648)
+render_target_update_mode = 4
+
+[node name="World" type="Node3D" parent="SubViewport"]
+
+[node name="CSGBox3D" type="CSGBox3D" parent="SubViewport/World"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.60273, -0.245423, 3.55448)
 use_collision = true
 size = Vector3(100, 0.1, 100)
+material = SubResource("StandardMaterial3D_bo560")
 
-[node name="Player" parent="." instance=ExtResource("1_q7ah7")]
+[node name="Player" parent="SubViewport/World" instance=ExtResource("1_q7ah7")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.973, 1, 3.935)
 
-[node name="CSGBox3D2" type="CSGBox3D" parent="."]
+[node name="CSGBox3D2" type="CSGBox3D" parent="SubViewport/World"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.921326, 0.890129, 1.02368)
 use_collision = true
 size = Vector3(2.84265, 2.2384, 3.04736)
+material = SubResource("ShaderMaterial_ksrt8")
 
-[node name="CSGBox3D4" type="CSGBox3D" parent="."]
+[node name="CSGBox3D4" type="CSGBox3D" parent="SubViewport/World"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.03172, 1.68751, 9.28121)
 use_collision = true
 size = Vector3(4.65875, 3.83316, 3.89343)
+material = SubResource("ShaderMaterial_ksrt8")
 
-[node name="CSGBox3D5" type="CSGBox3D" parent="."]
+[node name="CSGBox3D5" type="CSGBox3D" parent="SubViewport/World"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.9574, 0.807769, -7.81393)
 use_collision = true
 size = Vector3(2.8074, 2.07368, 3.00824)
+material = SubResource("ShaderMaterial_ksrt8")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="SubViewport/World"]
 transform = Transform3D(1, 0, 0, 0, 0.975215, 0.221259, 0, -0.221259, 0.975215, 0, 0, 0)
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="SubViewport/World"]
 environment = SubResource("Environment_e0ni3")
 
-[node name="CSGBox3D3" type="CSGBox3D" parent="."]
+[node name="CSGBox3D3" type="CSGBox3D" parent="SubViewport/World"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.2019, 0.0606129, 9.60396)
 snap = 1e-06
 use_collision = true
 size = Vector3(5, 0.5, 5)
+material = SubResource("ShaderMaterial_ksrt8")

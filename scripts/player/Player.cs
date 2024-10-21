@@ -1,10 +1,16 @@
-using System;
 using Godot;
 
 public partial class Player : CharacterBody3D
 {
-	private const float Speed = 5.0f;
-	private const float JumpVelocity = 5.5f;
+	[Export] private float BaseSpeed = 5.0f;
+	[Export] private float SprintSpeed = 8.0f;
+	[Export] private float JumpVelocity = 5.5f;
+	[Export] private float MaxStamina = 50.0f;
+	[Export] private float StaminaReducePerSecond = 30.0f;
+	[Export] private float StaminaIncreasePerSecond = 1.5f;
+
+	private float _speed = 0.0f;
+	private float _stamina = 0.0f;
 
 	private const float bob_freq = 2.0f;
 	private const float bob_ampl = 0.08f;
@@ -16,6 +22,9 @@ public partial class Player : CharacterBody3D
 
     public override void _Ready()
     {
+		_speed = BaseSpeed;
+		_stamina = MaxStamina;
+
 		Input.MouseMode = Input.MouseModeEnum.Captured;
     }
 
@@ -33,39 +42,54 @@ public partial class Player : CharacterBody3D
 	{
 		Vector3 velocity = Velocity;
 
-		// Add the gravity.
+		float staminaIncrease = _stamina - StaminaReducePerSecond * (float)delta;
+		if (Input.IsActionPressed("Sprint") && staminaIncrease > 0.0f)
+		{
+			_speed = SprintSpeed;
+			_stamina -= staminaIncrease;
+		}
+		else
+		{
+			_speed = BaseSpeed;
+			if (_stamina < MaxStamina)
+			{
+				_stamina += StaminaIncreasePerSecond * (float)delta;
+			}
+		}
+
+		_stamina = Mathf.Clamp(_stamina, 0.0f, MaxStamina);
+
+		GD.Print("stamina -> " + _stamina);
+
 		if (!IsOnFloor())
 		{
 			velocity += GetGravity() * (float)delta;
 		}
 
-		// Handle Jump.
 		if (Input.IsActionJustPressed("ui_accept") && IsOnFloor())
 		{
 			velocity.Y = JumpVelocity;
 		}
 
-		// Get the input direction and handle the movement/deceleration.
-		// As good practice, you should replace UI actions with custom gameplay actions.
 		Vector2 inputDir = Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down");
 		Vector3 direction = (head.Transform.Basis * new Vector3(inputDir.X, 0, inputDir.Y)).Normalized();
 		if (IsOnFloor())
 		{
 			if (direction != Vector3.Zero)
 			{
-				velocity.X = direction.X * Speed;
-				velocity.Z = direction.Z * Speed;
+				velocity.X = direction.X * _speed;
+				velocity.Z = direction.Z * _speed;
 			}
 			else
 			{
-				velocity.X = Mathf.Lerp(velocity.X, direction.X * Speed, (float)delta * 8.0f);
-				velocity.Z = Mathf.Lerp(velocity.Z, direction.Z * Speed, (float)delta * 8.0f);
+				velocity.X = Mathf.Lerp(velocity.X, direction.X * _speed, (float)delta * 8.0f);
+				velocity.Z = Mathf.Lerp(velocity.Z, direction.Z * _speed, (float)delta * 8.0f);
 			}
 		}
 		else
 		{
-			velocity.X = Mathf.Lerp(velocity.X, direction.X * Speed, (float)delta * 3.0f);
-			velocity.Z = Mathf.Lerp(velocity.Z, direction.Z * Speed, (float)delta * 3.0f);
+			velocity.X = Mathf.Lerp(velocity.X, direction.X * _speed, (float)delta * 3.0f);
+			velocity.Z = Mathf.Lerp(velocity.Z, direction.Z * _speed, (float)delta * 3.0f);
 		}
 
 		t_bob += delta * velocity.Length() * (IsOnFloor() ? 1.0 : 0.0);
